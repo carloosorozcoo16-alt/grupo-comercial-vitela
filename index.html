@@ -104,7 +104,7 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
 
 /* Hero (solo inicio) */
 .hero{position:relative;overflow:hidden;background:var(--hueso);padding-block:3.2rem 4rem;}
-.hero-texto{max-width:62ch;margin-bottom:2.6rem;}
+.hero-texto{max-width:62ch;margin-top:2.6rem;margin-bottom:0;}
 .hero-etiqueta{display:inline-block;font-weight:700;font-size:.82rem;color:var(--rojo-oscuro);border:1.5px solid var(--rojo);padding:.3rem .8rem;border-radius:2px;margin-bottom:1.2rem;}
 .hero h1{font-size:clamp(2.6rem,5.6vw,4.4rem);color:var(--carbon);text-transform:uppercase;}
 .hero h1 em{font-style:normal;color:var(--rojo);}
@@ -124,13 +124,20 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
   background:var(--hueso);
 }
 .carrusel-pista{
-  display:flex;width:100%;aspect-ratio:21/9;
+  display:flex;width:100%;aspect-ratio:4/3;
   overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
   -webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;
 }
 .carrusel-pista::-webkit-scrollbar{display:none;height:0;width:0;}
-.carrusel-slide{flex:none;scroll-snap-align:start;scroll-snap-stop:always;}
-.carrusel-slide img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+.carrusel-slide{
+  flex:none;height:100%;
+  scroll-snap-align:start;scroll-snap-stop:always;
+  display:flex;align-items:center;justify-content:center;
+}
+.carrusel-slide img{
+  width:100%;height:100%;object-fit:contain;
+  display:block;pointer-events:none;
+}
 .carrusel-flecha{
   position:absolute;top:50%;transform:translateY(-50%);
   width:48px;height:48px;border-radius:50%;border:none;
@@ -309,15 +316,6 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
 
 <section class="hero" id="inicio">
   <div class="contenedor">
-    <div class="hero-texto">
-      <span class="hero-etiqueta">Mayoreo y menudeo de Owala en CDMX</span>
-      <h1>El stock <em>Owala</em> que tu negocio necesita</h1>
-      <p>En Grupo Comercial Vitela conseguimos tus termos Owala por paquete o por pieza: FreeSip, Tumbler y línea Kids, en los colores y tamaños que más se venden.</p>
-      <div class="hero-botones">
-        <a href="mayoreo.html" class="boton boton-primario">Ver paquetes de mayoreo</a>
-        <a href="menudeo.html" class="boton boton-fantasma">Comprar por pieza</a>
-      </div>
-    </div>
     <div class="carrusel" id="carruselHero">
       <div class="carrusel-marco">
         <div class="carrusel-pista" id="carruselPista">
@@ -333,6 +331,16 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
         </button>
       </div>
       <div class="carrusel-puntos" id="carruselPuntos"></div>
+    </div>
+
+
+    <div class="hero-texto">
+      <h1>El stock <em>Owala</em> que tu negocio necesita</h1>
+      <p>En Grupo Comercial Vitela conseguimos tus termos Owala por paquete o por pieza: FreeSip, Tumbler y línea Kids, en los colores y tamaños que más se venden.</p>
+      <div class="hero-botones">
+        <a href="mayoreo.html" class="boton boton-primario">Ver paquetes de mayoreo</a>
+        <a href="menudeo.html" class="boton boton-fantasma">Comprar por pieza</a>
+      </div>
     </div>
   </div>
 </section>
