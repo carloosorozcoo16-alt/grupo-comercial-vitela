@@ -118,19 +118,24 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
 .carrusel{position:relative;width:min(430px,92%);}
 .carrusel-marco{
   position:relative;overflow:hidden;border-radius:6px;
-  width:100%;padding-top:75%; /* truco de proporcion 4:3, evita bugs de aspect-ratio en iOS */
-  background:var(--carbon);
   box-shadow:0 26px 46px rgba(0,0,0,.32);
+  background:var(--hueso);
 }
-.carrusel-pista{position:absolute;inset:0;display:flex;height:100%;transition:transform .5s ease;}
-.carrusel-slide{flex:0 0 100%;height:100%;}
-.carrusel-slide img{width:100%;height:100%;object-fit:cover;display:block;}
+.carrusel-pista{
+  display:flex;width:100%;aspect-ratio:4/3;
+  overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;
+}
+.carrusel-pista::-webkit-scrollbar{display:none;height:0;width:0;}
+.carrusel-slide{flex:0 0 100%;width:100%;scroll-snap-align:start;scroll-snap-stop:always;}
+.carrusel-slide img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
 .carrusel-flecha{
   position:absolute;top:50%;transform:translateY(-50%);
   width:42px;height:42px;border-radius:50%;border:none;
   background:var(--blanco);color:var(--carbon);
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 8px 18px rgba(0,0,0,.28);
+  z-index:2;
 }
 .carrusel-flecha:hover{background:var(--rojo);color:var(--blanco);}
 .carrusel-flecha svg{width:20px;height:20px;}
@@ -464,6 +469,7 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
   if (!pista) return;
   var total = pista.children.length;
   var indice = 0;
+  var moviendoPorClick = false;
 
   for (var i = 0; i < total; i++){
     var p = document.createElement('button');
@@ -473,17 +479,33 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
     puntosCont.appendChild(p);
   }
 
-  function actualizar(){
-    var porcentaje = (100 / total) * indice;
-    pista.style.transform = 'translateX(-' + porcentaje + '%)';
+  function marcarPunto(){
     Array.prototype.forEach.call(puntosCont.children, function(el, i){
       el.classList.toggle('activo', i === indice);
     });
   }
-  function irA(n){ indice = (n + total) % total; actualizar(); }
+
+  function irA(n){
+    indice = (n + total) % total;
+    moviendoPorClick = true;
+    pista.scrollTo({ left: indice * pista.clientWidth, behavior: 'smooth' });
+    marcarPunto();
+    setTimeout(function(){ moviendoPorClick = false; }, 500);
+  }
 
   document.getElementById('carruselAnterior').addEventListener('click', function(){ irA(indice - 1); });
   document.getElementById('carruselSiguiente').addEventListener('click', function(){ irA(indice + 1); });
+
+  /* Si el usuario desliza con el dedo, mantenemos los puntos sincronizados */
+  var temporizadorScroll = null;
+  pista.addEventListener('scroll', function(){
+    if (moviendoPorClick) return;
+    clearTimeout(temporizadorScroll);
+    temporizadorScroll = setTimeout(function(){
+      indice = Math.round(pista.scrollLeft / pista.clientWidth);
+      marcarPunto();
+    }, 120);
+  });
 
   var auto = null;
   var reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -493,6 +515,11 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
   carrusel.addEventListener('mouseenter', detenerAuto);
   carrusel.addEventListener('mouseleave', iniciarAuto);
   iniciarAuto();
+
+  /* Si cambia el tamaño de pantalla, realinea sin animacion */
+  window.addEventListener('resize', function(){
+    pista.scrollLeft = indice * pista.clientWidth;
+  });
 })();
 </script>
 
