@@ -20,6 +20,7 @@
   --gris-linea:  #E7DFDA;
   --fuente-display: "Big Shoulders Display", sans-serif;
   --fuente-texto:   "Inter", sans-serif;
+  --alto-header: 64px;
 }
 *,*::before,*::after{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
@@ -72,13 +73,18 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
 .boton-menu{display:none;background:none;border:none;padding:.4rem;}
 .boton-menu svg{width:26px;height:26px;}
 @media (max-width:880px){
-  .nav-links{position:fixed;inset:64px 0 0 0;background:var(--blanco);flex-direction:column;justify-content:flex-start;padding:2rem 6%;gap:1.4rem;transform:translateX(100%);transition:transform .3s ease;}
+  .nav-links{position:fixed;top:var(--alto-header);left:0;right:0;bottom:0;background:var(--blanco);flex-direction:column;justify-content:flex-start;padding:2rem 6%;gap:1.4rem;transform:translateX(100%);transition:transform .3s ease;z-index:55;}
   .nav-links.abierto{transform:translateX(0);}
   .nav-links a{font-size:1.2rem;}
   .boton-menu{display:block;}
   .nav-cta .boton-primario{padding:.6rem;border-radius:50%;}
   .nav-cta .boton-primario span{display:none;}
 }
+/* Cuando el menú móvil está abierto, el encabezado se fija arriba (con su logo y botón de cierre
+   siempre visibles) para no perder la referencia ni la facilidad de regreso al sitio anterior,
+   y se bloquea el scroll del fondo. */
+body.menu-abierto{overflow:hidden;}
+body.menu-abierto .encabezado{position:fixed;top:0;left:0;right:0;width:100%;z-index:60;}
 
 /* Encabezado de pagina interior (sin hero grande) */
 .cabecera-pagina{padding:3.2rem 0 1rem;border-bottom:1px solid var(--gris-linea);background:var(--hueso);}
@@ -97,8 +103,8 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
 .hero h1 em{font-style:normal;color:var(--rojo);}
 .hero p{max-width:46ch;margin:1.3rem 0 2rem;color:var(--gris);font-size:1.08rem;}
 .hero-botones{display:flex;flex-wrap:wrap;gap:1rem;}
-.hero-visual{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;}
-.hero-visual img{width:min(360px,82%);filter:drop-shadow(0 24px 34px rgba(0,0,0,.28));}
+.hero-visual{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;overflow:visible;}
+.hero-visual img{width:min(360px,82%);height:auto;max-width:100%;object-fit:contain;filter:drop-shadow(0 24px 34px rgba(0,0,0,.28));}
 
 /* Carrusel del hero */
 .carrusel{position:relative;width:min(430px,92%);}
@@ -106,10 +112,15 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
   position:relative;overflow:hidden;border-radius:6px;
   aspect-ratio:4/3;background:var(--carbon);
   box-shadow:0 26px 46px rgba(0,0,0,.32);
+  transition:aspect-ratio .2s ease;
 }
 .carrusel-pista{display:flex;height:100%;transition:transform .5s ease;}
 .carrusel-slide{flex:0 0 100%;height:100%;}
-.carrusel-slide img{width:100%;height:100%;object-fit:cover;display:block;}
+.carrusel-slide img{width:100%;height:100%;object-fit:cover;display:block;transition:object-fit .2s ease;}
+/* En dispositivos móviles (detectados dinámicamente vía JS) se evita recortar la imagen:
+   se cambia a un marco más vertical y a object-fit:contain, mostrando la imagen completa. */
+body.dispositivo-movil .carrusel-marco{aspect-ratio:3/4;background:var(--hueso);}
+body.dispositivo-movil .carrusel-slide img{object-fit:contain;background:var(--hueso);}
 .carrusel-flecha{
   position:absolute;top:50%;transform:translateY(-50%);
   width:42px;height:42px;border-radius:50%;border:none;
@@ -412,16 +423,56 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
   "use strict";
   var botonMenu = document.getElementById('botonMenu');
   var menuNav = document.getElementById('menuNav');
+  var encabezado = document.querySelector('.encabezado');
+  var scrollGuardado = 0;
+
+  function actualizarAlturaEncabezado(){
+    document.documentElement.style.setProperty('--alto-header', encabezado.offsetHeight + 'px');
+  }
+  actualizarAlturaEncabezado();
+  window.addEventListener('resize', actualizarAlturaEncabezado);
+  window.addEventListener('orientationchange', actualizarAlturaEncabezado);
+
+  function abrirMenu(){
+    actualizarAlturaEncabezado();
+    scrollGuardado = window.scrollY || document.documentElement.scrollTop;
+    document.body.classList.add('menu-abierto');
+    menuNav.classList.add('abierto');
+    botonMenu.setAttribute('aria-expanded', 'true');
+  }
+  function cerrarMenu(){
+    document.body.classList.remove('menu-abierto');
+    menuNav.classList.remove('abierto');
+    botonMenu.setAttribute('aria-expanded', 'false');
+    window.scrollTo(0, scrollGuardado);
+  }
+
   botonMenu.addEventListener('click', function(){
-    var abierto = menuNav.classList.toggle('abierto');
-    botonMenu.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+    if (menuNav.classList.contains('abierto')) { cerrarMenu(); } else { abrirMenu(); }
   });
   menuNav.querySelectorAll('a').forEach(function(enlace){
-    enlace.addEventListener('click', function(){
-      menuNav.classList.remove('abierto');
-      botonMenu.setAttribute('aria-expanded', 'false');
-    });
+    enlace.addEventListener('click', cerrarMenu);
   });
+})();
+</script>
+
+<script>
+(function(){
+  "use strict";
+  // Detecta dinámicamente si el dispositivo es móvil (por ancho de pantalla) y
+  // actualiza una clase en <body> para que las imágenes usen un encuadre que
+  // no las recorte. Se reevalúa en tiempo real ante cambios de tamaño,
+  // rotación de pantalla o si el usuario cambia de dispositivo/ventana.
+  var consultaMovil = window.matchMedia('(max-width:600px)');
+  function actualizarClaseDispositivo(consulta){
+    document.body.classList.toggle('dispositivo-movil', consulta.matches);
+  }
+  actualizarClaseDispositivo(consultaMovil);
+  if (consultaMovil.addEventListener) {
+    consultaMovil.addEventListener('change', actualizarClaseDispositivo);
+  } else if (consultaMovil.addListener) {
+    consultaMovil.addListener(actualizarClaseDispositivo);
+  }
 })();
 </script>
 
