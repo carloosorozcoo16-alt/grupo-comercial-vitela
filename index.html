@@ -474,7 +474,8 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
   }
 
   function actualizar(){
-    pista.style.transform = 'translateX(-' + (indice * 100) + '%)';
+    var porcentaje = (100 / total) * indice;
+    pista.style.transform = 'translateX(-' + porcentaje + '%)';
     Array.prototype.forEach.call(puntosCont.children, function(el, i){
       el.classList.toggle('activo', i === indice);
     });
