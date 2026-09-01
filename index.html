@@ -127,7 +127,7 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
   -webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;
 }
 .carrusel-pista::-webkit-scrollbar{display:none;height:0;width:0;}
-.carrusel-slide{flex:0 0 100%;width:100%;scroll-snap-align:start;scroll-snap-stop:always;}
+.carrusel-slide{flex:none;scroll-snap-align:start;scroll-snap-stop:always;}
 .carrusel-slide img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
 .carrusel-flecha{
   position:absolute;top:50%;transform:translateY(-50%);
@@ -467,9 +467,19 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
   var pista = document.getElementById('carruselPista');
   var puntosCont = document.getElementById('carruselPuntos');
   if (!pista) return;
-  var total = pista.children.length;
+  var slides = Array.prototype.slice.call(pista.children);
+  var total = slides.length;
   var indice = 0;
   var moviendoPorClick = false;
+
+  /* Fijamos el ancho de cada imagen en pixeles exactos del marco visible.
+     Evita que el navegador calcule mal los porcentajes dentro de un
+     contenedor con scroll (esto es lo que causaba el descuadre en movil). */
+  function ajustarAnchos(){
+    var ancho = pista.clientWidth;
+    slides.forEach(function(s){ s.style.width = ancho + 'px'; });
+    pista.scrollLeft = indice * ancho;
+  }
 
   for (var i = 0; i < total; i++){
     var p = document.createElement('button');
@@ -496,7 +506,6 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
   document.getElementById('carruselAnterior').addEventListener('click', function(){ irA(indice - 1); });
   document.getElementById('carruselSiguiente').addEventListener('click', function(){ irA(indice + 1); });
 
-  /* Si el usuario desliza con el dedo, mantenemos los puntos sincronizados */
   var temporizadorScroll = null;
   pista.addEventListener('scroll', function(){
     if (moviendoPorClick) return;
@@ -514,12 +523,15 @@ h1,h2,h3,h4{font-family:var(--fuente-display);font-weight:700;line-height:.98;ma
   var carrusel = document.getElementById('carruselHero');
   carrusel.addEventListener('mouseenter', detenerAuto);
   carrusel.addEventListener('mouseleave', iniciarAuto);
-  iniciarAuto();
 
-  /* Si cambia el tamaño de pantalla, realinea sin animacion */
+  var temporizadorResize = null;
   window.addEventListener('resize', function(){
-    pista.scrollLeft = indice * pista.clientWidth;
+    clearTimeout(temporizadorResize);
+    temporizadorResize = setTimeout(ajustarAnchos, 150);
   });
+
+  ajustarAnchos();
+  iniciarAuto();
 })();
 </script>
 
